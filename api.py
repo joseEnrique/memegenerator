@@ -1,9 +1,9 @@
-from flask import Flask, render_template, request, send_file
+from flask import Flask, render_template, request, send_file,send_from_directory
 from io import BytesIO,StringIO
 from PIL import ImageFont
 from PIL import Image
 from PIL import ImageDraw
-import json, urllib.request
+import json, urllib.request,os
 app = Flask(__name__)
 
 @app.route('/')
@@ -13,14 +13,31 @@ def index():
 @app.route('/uploader', methods = ['GET', 'POST'])
 def upload_file():
    if request.method == 'POST':
-      temp = BytesIO()
-      modified = BytesIO()
-      f = request.files['file']
-      f.save(temp)
-      #temp.seek(0)
-      modified = make_meme("Si no esta en Javascript","esque no existe",temp)
-      modified.seek(0)
-      return send_file(modified,attachment_filename='test.jpeg', mimetype=f.mimetype)
+      try:
+         temp = BytesIO()
+         modified = BytesIO()
+         f = request.files['file']
+         f.save(temp)
+         #temp.seek(0)
+         modified = make_meme("Si no esta en Javascript","esque no existe",temp)
+         modified.seek(0)
+         print (modified)
+         return send_file(modified,attachment_filename='test.jpeg', mimetype=f.mimetype)
+      except Exception as e: print(e)
+
+@app.route('/images/<path:path>')
+def send_image(path):
+   print (path)
+   return send_from_directory("public", path)
+
+@app.route('/images/')
+def list_images():
+   hists = os.listdir('public')
+   print (hists)
+   hists = ['images/' + file for file in hists]
+   print (hists)
+   return render_template('report.html', hists = hists)
+
 
 
 def make_meme(topString, bottomString, temp):
@@ -75,4 +92,5 @@ def request_to_andaluh(string_to_andaluh):
 
 
 if __name__ == '__main__':
-    app.run( debug=True)
+   app.debug = True
+   app.run( debug=True)
